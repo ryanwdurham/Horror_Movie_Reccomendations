@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horror Movie Recommender</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a0b2e 50%, #16003b 100%);
+      color: #f0f0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(10, 10, 30, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header h1 {
+      color: #a855f7;
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+    }
+
+    .search-container {
+      margin-top: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .input-field {
+      flex: 1;
+      background: rgba(20, 20, 50, 0.7);
+      border: 2px solid rgba(138, 43, 226, 0.3);
+      color: #f0f0f0;
+      padding: 0.875rem 1.25rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .input-field:focus {
+      border-color: #a855f7;
+    }
+
+    .input-field::placeholder {
+      color: #8b5cf6;
+    }
+
+    .search-btn {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      color: #fff;
+      border: none;
+      padding: 0.875rem 2rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+    }
+
+    .search-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+    }
+
+    .search-btn:disabled {
+      background: #374151;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .categories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .category-btn {
+      background: rgba(124, 58, 237, 0.2);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #c4b5fd;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .category-btn:hover {
+      background: rgba(124, 58, 237, 0.4);
+      border-color: #a855f7;
+      transform: translateY(-1px);
+    }
+
+    .category-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .category-desc {
+      font-size: 0.75rem;
+      color: #a78bfa;
+      line-height: 1.3;
+    }
+
+    .results-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 2rem;
+      padding-top: 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    @media (max-width: 768px) {
+      .results-container {
+        padding: 1rem;
+        padding-top: 1rem;
+      }
+      
+      .header {
+        position: relative;
+      }
+    }
+
+    .results-header {
+      color: #c4b5fd;
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+    }
+
+    .movies-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .movie-card {
+      background: rgba(20, 20, 50, 0.6);
+      border: 1px solid rgba(138, 43, 226, 0.3);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      transition: all 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .movie-card:hover {
+      border-color: #a855f7;
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3);
+    }
+
+    .movie-poster-container {
+      width: 100%;
+      height: 360px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .movie-poster {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .movie-poster-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+    }
+
+    .favorite-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      background: rgba(0, 0, 0, 0.7);
+      border: 2px solid rgba(168, 85, 247, 0.5);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.25rem;
+      transition: all 0.2s;
+      z-index: 10;
+    }
+
+    .favorite-btn:hover {
+      background: rgba(168, 85, 247, 0.8);
+      transform: scale(1.1);
+    }
+
+    .favorite-btn.active {
+      background: rgba(168, 85, 247, 0.9);
+      color: #fbbf24;
+    }
+
+    .movie-info {
+      padding: 1rem;
+    }
+
+    .movie-title {
+      color: #e9d5ff;
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+      min-height: 2.6rem;
+    }
+
+    .movie-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: #a78bfa;
+      margin-bottom: 0.75rem;
+    }
+
+    .movie-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .movie-overview {
+      color: #c4b5fd;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      max-height: none;
+    }
+
+    .highly-rated {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      margin-top: 0.5rem;
+      border: 1px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 3rem;
+    }
+
+    .loading-dot {
+      width: 1rem;
+      height: 1rem;
+      background: #a855f7;
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+    }
+
+    .loading-dot:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #a78bfa;
+    }
+
+    .empty-state h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #c4b5fd;
+    }
+
+    .watchlist-btn {
+      background: rgba(124, 58, 237, 0.3);
+      border: 2px solid rgba(168, 85, 247, 0.5);
+      color: #e9d5ff;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 0.5rem;
+    }
+
+    .watchlist-btn:hover {
+      background: rgba(124, 58, 237, 0.5);
+      border-color: #a855f7;
+    }
+
+    .watchlist-count {
+      background: #a855f7;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
+    }
+
+    .load-more-btn {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      color: #fff;
+      border: none;
+      padding: 1rem 3rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+      margin: 2rem auto;
+      display: block;
+    }
+
+    .load-more-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-content">
+      <h1>👻 Horror Movie Finder</h1>
+      
+      <div class="search-container">
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="input-field" 
+          placeholder='Try "80s slasher movies" or "movies like The Shining"...'
+          onkeypress="if(event.key === 'Enter') performSearch()"
+        >
+        <button class="search-btn" id="searchBtn" onclick="performSearch()">Search</button>
+        <button class="watchlist-btn" onclick="showWatchlist()">
+          My Watchlist
+          <span class="watchlist-count" id="watchlistCount">0</span>
+        </button>
+      </div>
+
+      <div class="categories">
+        <button class="category-btn" onclick="quickSearch('slasher')">
+          <div class="category-title">🔪 Slashers</div>
+          <div class="category-desc">Masked killers, final girls, high body counts</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('monster movies')">
+          <div class="category-title">🧟 Monster Movies</div>
+          <div class="category-desc">Creatures, beasts, things that shouldn't exist</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('possession horror')">
+          <div class="category-title">😈 Possession Horror</div>
+          <div class="category-desc">Demons, exorcisms, and religious dread</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('psychological horror')">
+          <div class="category-title">🧠 Psychological Horror</div>
+          <div class="category-desc">Mind games, paranoia, slow-burn tension</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('supernatural horror')">
+          <div class="category-title">👁️ Supernatural Horror</div>
+          <div class="category-desc">Ghosts, curses, hauntings, the unknown</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('slow burn horror')">
+          <div class="category-title">🕯️ Slow Burn Horror</div>
+          <div class="category-desc">Atmospheric films that build dread over time</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('relentless horror')">
+          <div class="category-title">⚡ Relentless & Intense</div>
+          <div class="category-desc">No breaks, anxiety from start to finish</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('dark disturbing')">
+          <div class="category-title">🌑 Dark & Disturbing</div>
+          <div class="category-desc">Unsettling themes that linger after credits</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('hidden gems')">
+          <div class="category-title">💎 Hidden Horror Gems</div>
+          <div class="category-desc">Underrated films with strong reviews</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('home invasion')">
+          <div class="category-title">🏠 Home Invasion</div>
+          <div class="category-desc">Safe places turned dangerous</div>
+        </button>
+        <button class="category-btn" onclick="quickSearch('visually striking')">
+          <div class="category-title">🎨 Visually Striking</div>
+          <div class="category-desc">Style-forward films with strong visuals</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-container" id="resultsContainer">
+    <div class="empty-state">
+      <h2>🎬 Ready to Find Your Next Horror Fix?</h2>
+      <p>Search above or click a category to get started!</p>
+    </div>
+  </div>
+
+  <script>
+    const TMDB_API_KEY = 'e546e08d1bdccb75a8599e9177248d59';
+    const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+    const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w500';
+    
+    let watchlist = JSON.parse(localStorage.getItem('horrorWatchlist') || '[]');
+    let currentPage = 1;
+    let currentQuery = '';
+    let allResults = [];
+    
+    updateWatchlistCount();
+
+    const STEPHEN_KING_KEYWORDS = [8739];
+
+    async function performSearch(loadMore = false) {
+      const input = document.getElementById('searchInput');
+      const query = input.value.trim();
+      
+      if (!query) return;
+      
+      if (!loadMore) {
+        currentQuery = query;
+        currentPage = 1;
+        allResults = [];
+      }
+      
+      const resultsContainer = document.getElementById('resultsContainer');
+      const searchBtn = document.getElementById('searchBtn');
+      
+      searchBtn.disabled = true;
+      
+      if (!loadMore) {
+        resultsContainer.innerHTML = '<div class="loading"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+      }
+      
+      try {
+        const movies = await searchMovies(query, currentPage);
+        
+        if (loadMore) {
+          allResults = [...allResults, ...movies];
+        } else {
+          allResults = movies;
+        }
+        
+        displayResults(allResults, query, movies.length > 0);
+        currentPage++;
+      } catch (error) {
+        console.error('Search error:', error);
+        resultsContainer.innerHTML = '<div class="empty-state"><h2>😱 Something went wrong!</h2><p>Try again in a moment...</p></div>';
+      }
+      
+      searchBtn.disabled = false;
+    }
+
+    function quickSearch(query) {
+      document.getElementById('searchInput').value = query;
+      performSearch();
+    }
+
+    async function searchMovies(query, page = 1) {
+      const lowerQuery = query.toLowerCase();
+      
+      const decadeMatch = lowerQuery.match(/(\d{2}s|19\d{2}s|20\d{2}s|\d{4})/);
+      let startYear = null, endYear = null;
+      
+      if (decadeMatch) {
+        if (decadeMatch[0].includes('80s') || decadeMatch[0] === '1980s') {
+          startYear = 1980; endYear = 1989;
+        } else if (decadeMatch[0].includes('70s') || decadeMatch[0] === '1970s') {
+          startYear = 1970; endYear = 1979;
+        } else if (decadeMatch[0].includes('90s') || decadeMatch[0] === '1990s') {
+          startYear = 1990; endYear = 1999;
+        } else if (decadeMatch[0].includes('2000s')) {
+          startYear = 2000; endYear = 2009;
+        }
+      }
+      
+      if (lowerQuery.includes('like ') || lowerQuery.includes('similar')) {
+        const movieName = lowerQuery.replace(/movies?\s*(like|similar\s*to)\s*/gi, '').trim();
+        return await findSimilarMovies(movieName, page);
+      }
+      
+      if (lowerQuery.includes('stephen king') || lowerQuery.includes('king movies')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=${STEPHEN_KING_KEYWORDS.join(',')}&sort_by=popularity.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('slasher')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=1975-01-01&primary_release_date.lte=1995-12-31&popularity.gte=10&vote_count.gte=500&sort_by=popularity.desc&page=${page}`;
+        
+        if (startYear && endYear) {
+          url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=${startYear}-01-01&primary_release_date.lte=${endYear}-12-31&popularity.gte=10&vote_count.gte=300&sort_by=popularity.desc&page=${page}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('psychological')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&vote_count.lte=3000&vote_count.gte=100&popularity.lte=20&sort_by=vote_average.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('slow burn')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.2&popularity.lte=15&vote_count.gte=50&sort_by=vote_average.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('hidden gem')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=6.5&vote_count.gte=50&vote_count.lte=500&sort_by=vote_average.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('monster')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=1299|3986|10241&sort_by=popularity.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('possession') || lowerQuery.includes('exorcis') || lowerQuery.includes('demon')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=9715|180547&sort_by=vote_average.desc&vote_count.gte=100&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('supernatural') || lowerQuery.includes('ghost')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=10224|9715&sort_by=vote_average.desc&vote_count.gte=100&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('home invasion')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=158718&sort_by=popularity.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('relentless') || lowerQuery.includes('intense')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=6.8&popularity.gte=15&sort_by=popularity.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('dark') || lowerQuery.includes('disturbing')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&vote_count.gte=100&sort_by=vote_average.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('visual') || lowerQuery.includes('striking')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&primary_release_date.gte=2010-01-01&sort_by=vote_average.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('popular') || lowerQuery.includes('top')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&sort_by=vote_average.desc&vote_count.gte=1000&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('recent') || lowerQuery.includes('new')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=2022-01-01&sort_by=popularity.desc&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      if (lowerQuery.includes('classic')) {
+        let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.lte=1999-12-31&sort_by=vote_average.desc&vote_count.gte=500&page=${page}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.results || [];
+      }
+      
+      const searchUrl = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=${page}`;
+      const searchResponse = await fetch(searchUrl);
+      const searchData = await searchResponse.json();
+      
+      const horrorResults = searchData.results?.filter(m => m.genre_ids && m.genre_ids.includes(27)) || [];
+      
+      if (horrorResults.length > 0) {
+        return horrorResults;
+      }
+      
+      const fallbackUrl = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&sort_by=popularity.desc&page=${page}`;
+      const fallbackResponse = await fetch(fallbackUrl);
+      const fallbackData = await fallbackResponse.json();
+      return fallbackData.results || [];
+    }
+
+    async function findSimilarMovies(movieName, page = 1) {
+      try {
+        const searchUrl = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movieName)}`;
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+        
+        if (!searchData.results || searchData.results.length === 0) {
+          return [];
+        }
+        
+        const movieId = searchData.results[0].id;
+        
+        const similarUrl = `${TMDB_BASE_URL}/movie/${movieId}/similar?api_key=${TMDB_API_KEY}&page=${page}`;
+        const similarResponse = await fetch(similarUrl);
+        const similarData = await similarResponse.json();
+        
+        return similarData.results?.filter(m => m.genre_ids && m.genre_ids.includes(27)) || [];
+      } catch (error) {
+        console.error('Similar movies error:', error);
+        return [];
+      }
+    }
+
+    function displayResults(movies, query, canLoadMore) {
+      const resultsContainer = document.getElementById('resultsContainer');
+      
+      if (movies.length === 0) {
+        resultsContainer.innerHTML = '<div class="empty-state"><h2>🔍 No movies found</h2><p>Try a different search term!</p></div>';
+        return;
+      }
+      
+      let html = `<div class="results-header">Found ${movies.length}+ movies for "${query}"</div>`;
+      html += '<div class="movies-grid">';
+      
+      movies.forEach(movie => {
+        const posterHtml = movie.poster_path 
+          ? `<img src="${TMDB_IMG_BASE}${movie.poster_path}" alt="${movie.title}" class="movie-poster">`
+          : `<div class="movie-poster-placeholder">🎬</div>`;
+        
+        const year = movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A';
+        const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+        const highlyRated = movie.vote_average >= 7.5 && movie.vote_count >= 200 
+          ? '<div class="highly-rated">✨ Highly Rated</div>' 
+          : '';
+        
+        const isFavorite = watchlist.some(w => w.id === movie.id);
+        const favoriteClass = isFavorite ? 'active' : '';
+        
+        const safeTitle = (movie.title || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const safePoster = (movie.poster_path || '').replace(/'/g, "\\'");
+        const safeRating = movie.vote_average || 0;
+        
+        html += `
+          <div class="movie-card">
+            <div class="movie-poster-container">
+              ${posterHtml}
+              <button class="favorite-btn ${favoriteClass}" onclick="toggleWatchlist(${movie.id}, '${safeTitle}', '${safePoster}', ${safeRating}, '${year}', event)">
+                ${isFavorite ? '⭐' : '☆'}
+              </button>
+            </div>
+            <div class="movie-info">
+              <div class="movie-title">${movie.title}</div>
+              <div class="movie-meta">
+                <span>📅 ${year}</span>
+                <span>⭐ ${rating}/10</span>
+                <span>📊 ${movie.vote_count} votes</span>
+              </div>
+              <div class="movie-overview">${movie.overview || 'No description available.'}</div>
+              ${highlyRated}
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      
+      if (canLoadMore) {
+        html += '<button class="load-more-btn" onclick="performSearch(true)">Load More Movies</button>';
+      }
+      
+      resultsContainer.innerHTML = html;
+      resultsContainer.scrollTop = 0;
+    }
+
+    function toggleWatchlist(id, title, poster, rating, year, event) {
+      event.stopPropagation();
+      
+      const index = watchlist.findIndex(w => w.id === id);
+      
+      if (index > -1) {
+        watchlist.splice(index, 1);
+      } else {
+        watchlist.push({ id, title, poster, rating, year });
+      }
+      
+      localStorage.setItem('horrorWatchlist', JSON.stringify(watchlist));
+      updateWatchlistCount();
+      
+      const btn = event.target;
+      if (index > -1) {
+        btn.classList.remove('active');
+        btn.textContent = '☆';
+      } else {
+        btn.classList.add('active');
+        btn.textContent = '⭐';
+      }
+    }
+
+    function updateWatchlistCount() {
+      document.getElementById('watchlistCount').textContent = watchlist.length;
+    }
+
+    function showWatchlist() {
+      if (watchlist.length === 0) {
+        document.getElementById('resultsContainer').innerHTML = 
+          '<div class="empty-state"><h2>📝 Your Watchlist is Empty</h2><p>Add movies by clicking the ☆ icon!</p></div>';
+        return;
+      }
+      
+      const resultsContainer = document.getElementById('resultsContainer');
+      let html = `<div class="results-header">My Watchlist (${watchlist.length} movies)</div>`;
+      html += '<div class="movies-grid">';
+      
+      watchlist.forEach(movie => {
+        const posterHtml = movie.poster 
+          ? `<img src="${TMDB_IMG_BASE}${movie.poster}" alt="${movie.title}" class="movie-poster">`
+          : `<div class="movie-poster-placeholder">🎬</div>`;
+        
+        html += `
+          <div class="movie-card">
+            <div class="movie-poster-container">
+              ${posterHtml}
+              <button class="favorite-btn active" onclick="toggleWatchlist(${movie.id}, '${movie.title.replace(/'/g, "\\'")}', '${movie.poster || ''}', ${movie.rating}, '${movie.year}', event)">
+                ⭐
+              </button>
+            </div>
+            <div class="movie-info">
+              <div class="movie-title">${movie.title}</div>
+              <div class="movie-meta">
+                <span>📅 ${movie.year}</span>
+                <span>⭐ ${movie.rating.toFixed(1)}/10</span>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      resultsContainer.innerHTML = html;
+      resultsContainer.scrollTop = 0;
+    }
+  </script>
+</body>
+</html>
