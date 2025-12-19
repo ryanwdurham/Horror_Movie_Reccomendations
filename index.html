@@ -36,13 +36,31 @@
       margin: 0 auto;
     }
 
-    .header h1 {
-      color: #a855f7;
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
-    }
+   .header h1 {
+  color: #a855f7;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  animation: glitch-flicker 3s infinite;
+}
+
+@keyframes glitch-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.8),
+                 0 0 40px rgba(168, 85, 247, 0.5);
+    opacity: 1;
+  }
+  20%, 24%, 55% {
+    text-shadow: 0 0 10px rgba(255, 0, 100, 0.8),
+                 2px 0 5px rgba(0, 255, 255, 0.7),
+                 -2px 0 5px rgba(255, 0, 0, 0.7);
+    opacity: 0.8;
+  }
+  22% {
+    opacity: 0.5;
+  }
+}
 
     .search-container {
       margin-top: 1rem;
@@ -369,7 +387,7 @@
 <body>
   <div class="header">
     <div class="header-content">
-      <h1>👻 Horror Movie Finder</h1>
+      <h1>👁️ Fright Finder 🔪</h1>
       
       <div class="search-container">
         <input 
@@ -805,3 +823,4 @@
 </body>
 
 </html>
+
