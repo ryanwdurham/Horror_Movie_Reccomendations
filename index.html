@@ -405,6 +405,18 @@
       </div>
 
       <div class="categories">
+
+    <div class="categories">
+  <button class="category-btn" onclick="quickSearch('top rated')">
+    <div class="category-title">⭐ Top Rated</div>
+    <div class="category-desc">Highest rated horror films of all time</div>
+  </button>
+  <button class="category-btn" onclick="quickSearch('classic')">
+    <div class="category-title">🎞️ Classic Horror</div>
+    <div class="category-desc">Timeless horror films that shaped the genre</div>
+  </button>
+
+
         <button class="category-btn" onclick="quickSearch('slasher')">
           <div class="category-title">🔪 Slashers</div>
           <div class="category-desc">Masked killers, final girls, high body counts</div>
@@ -433,10 +445,7 @@
           <div class="category-title">⚡ Relentless & Intense</div>
           <div class="category-desc">No breaks, anxiety from start to finish</div>
         </button>
-        <button class="category-btn" onclick="quickSearch('dark disturbing')">
-          <div class="category-title">🌑 Dark & Disturbing</div>
-          <div class="category-desc">Unsettling themes that linger after credits</div>
-        </button>
+      
         <button class="category-btn" onclick="quickSearch('hidden gems')">
           <div class="category-title">💎 Hidden Horror Gems</div>
           <div class="category-desc">Underrated films with strong reviews</div>
@@ -720,11 +729,18 @@ if (lowerQuery.includes('possession') || lowerQuery.includes('exorcis') || lower
     
     const allResults = [];
     
-    for (const url of searches) {
+for (const url of searches) {
       const response = await fetch(url);
       const data = await response.json();
       if (data.results) {
-        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        // Filter: must be horror, have poster, have votes, and have release date
+        const horrorResults = data.results.filter(m => 
+          m.genre_ids && 
+          m.genre_ids.includes(27) && 
+          m.poster_path && 
+          m.vote_count > 0 && 
+          m.release_date
+        );
         allResults.push(...horrorResults);
       }
     }
@@ -784,6 +800,381 @@ if (lowerQuery.includes('slasher')) {
     return data.results || [];
   }
 }
+
+// SLOW BURN HORROR
+if (lowerQuery.includes('slow burn')) {
+  if (page === 1) {
+    const searches = [
+     
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=hereditary`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+lighthouse`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=midsommar`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=it+follows`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+blackcoat's+daughter`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=rosemary's+baby`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+house+of+the+devil`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+witch`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.2&popularity.lte=15&vote_count.gte=50&sort_by=vote_average.desc`
+    ];
+    
+    const allResults = [];
+    
+    for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.2&popularity.lte=15&vote_count.gte=50&sort_by=vote_average.desc&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+
+// RELENTLESS/INTENSE
+if (lowerQuery.includes('relentless') || lowerQuery.includes('intense')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+descent`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=28+days+later`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=train+to+busan`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=evil+dead+2013`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=green+room`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+raid`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=dont+breathe`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=crawl+2019`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=6.8&popularity.gte=15&sort_by=popularity.desc`
+    ];
+    
+    const allResults = [];
+    
+    for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=6.8&popularity.gte=15&sort_by=popularity.desc&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+// VISUALLY STRIKING
+if (lowerQuery.includes('visual') || lowerQuery.includes('striking')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=suspiria`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+lighthouse`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+neon+demon`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=color+out+of+space`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=crimson+peak`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+company+of+wolves`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=annihilation`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=a+cure+for+wellness`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+substance`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+shining`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+cell+2000`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=mandy`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=Bram Strokers Dracula`,
+
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&primary_release_date.gte=2010-01-01&sort_by=vote_average.desc`
+    ];
+    
+    const allResults = [];
+    
+for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        // Filter: must be horror, have poster, have votes, and have release date
+        const horrorResults = data.results.filter(m => 
+          m.genre_ids && 
+          m.genre_ids.includes(27) && 
+          m.poster_path && 
+          m.vote_count > 0 && 
+          m.release_date
+        );
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&primary_release_date.gte=2010-01-01&sort_by=vote_average.desc&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+
+// PSYCHOLOGICAL HORROR
+if (lowerQuery.includes('psychological')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+babadook`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=black+swan`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=jacob's+ladder`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+others`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=mother!`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+machinist`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=shutter+island`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=saint+maud`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+lodge`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&vote_count.lte=3000&vote_count.gte=100&popularity.lte=20&sort_by=vote_average.desc`
+    ];
+    
+    const allResults = [];
+    
+    for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&vote_count.lte=3000&vote_count.gte=100&popularity.lte=20&sort_by=vote_average.desc&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+// SUPERNATURAL
+if (lowerQuery.includes('supernatural') || lowerQuery.includes('ghost')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+conjuring`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=insidious`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=sinister`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+others`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+sixth+sense`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=poltergeist`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+ring`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=ju-on`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=10224|9715&sort_by=vote_average.desc&vote_count.gte=100`
+    ];
+    
+    const allResults = [];
+    
+for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        // Filter: must be horror, have poster, have votes, and have release date
+        const horrorResults = data.results.filter(m => 
+          m.genre_ids && 
+          m.genre_ids.includes(27) && 
+          m.poster_path && 
+          m.vote_count > 0 && 
+          m.release_date
+        );
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=10224|9715&sort_by=vote_average.desc&vote_count.gte=100&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+// MONSTER MOVIES
+if (lowerQuery.includes('monster')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+thing`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=alien`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+fly`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=godzilla`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=cloverfield`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+host`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=tremors`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+mist`,
+`${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=Frankenstein`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=1299|3986|10241&sort_by=popularity.desc`
+    ];
+    
+    const allResults = [];
+    
+for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        // Filter: must be horror, have poster, have votes, and have release date
+        const horrorResults = data.results.filter(m => 
+          m.genre_ids && 
+          m.genre_ids.includes(27) && 
+          m.poster_path && 
+          m.vote_count > 0 && 
+          m.release_date
+        );
+        allResults.push(...horrorResults);
+      }
+    }
+
+// HIDDEN GEMS
+if (lowerQuery.includes('hidden gem')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+wailing`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=barbarian`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=terrified`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+autopsy+of+jane+doe`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+People+Under+The+Stairs`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=spring+2014`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+loved+ones`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=behind+the+mask`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=6.5&vote_count.gte=50&vote_count.lte=500&sort_by=vote_average.desc`
+    ];
+    
+    const allResults = [];
+    
+    for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=6.5&vote_count.gte=50&vote_count.lte=500&sort_by=vote_average.desc&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+// DARK/DISTURBING
+if (lowerQuery.includes('dark') || lowerQuery.includes('disturbing')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=martyrs`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=irreversible`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=antichrist`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+house+that+jack+built`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=a+serbian+film`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=funny+games`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+eyes+of+my+mother`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=we+need+to+talk+about+kevin`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&vote_count.gte=100&sort_by=vote_average.desc`
+    ];
+    
+    const allResults = [];
+    
+    for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&vote_average.gte=7.0&vote_count.gte=100&sort_by=vote_average.desc&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+
+// POPULAR/TOP RATED
+if (lowerQuery.includes('popular') || lowerQuery.includes('top')) {
+  let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&sort_by=vote_average.desc&vote_count.gte=1000&page=${page}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.results || [];
+}
+
+// RECENT
+if (lowerQuery.includes('recent') || lowerQuery.includes('new')) {
+  let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=2022-01-01&sort_by=popularity.desc&page=${page}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data.results || [];
+}
+
+// CLASSIC
+if (lowerQuery.includes('classic')) {
+  if (page === 1) {
+    const searches = [
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=psycho`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+exorcist`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=halloween`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+shining`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=alien`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=rosemary's+baby`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+thing`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=nightmare+on+elm+street`,
+      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.lte=1999-12-31&sort_by=vote_average.desc&vote_count.gte=500`
+    ];
+    
+    const allResults = [];
+    
+    for (const url of searches) {
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.results) {
+        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        allResults.push(...horrorResults);
+      }
+    }
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.lte=1999-12-31&sort_by=vote_average.desc&vote_count.gte=500&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+    
+    const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
+    return uniqueMovies;
+  } else {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=1299|3986|10241&sort_by=popularity.desc&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results || [];
+  }
+}
+
+
 
 
 
