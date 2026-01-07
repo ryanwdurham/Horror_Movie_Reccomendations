@@ -757,26 +757,37 @@ for (const url of searches) {
 
 // SLASHER
 if (lowerQuery.includes('slasher')) {
+  // Handle decade-specific searches
+  if (startYear && endYear) {
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=${startYear}-01-01&primary_release_date.lte=${endYear}-12-31&with_keywords=12339&sort_by=popularity.desc&vote_count.gte=30&page=${page}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    return data.results?.filter(m => m.poster_path && m.vote_count > 0 && m.release_date) || [];
+  }
+  
   if (page === 1) {
-    // Handle decade-specific searches first
-    if (startYear && endYear) {
-      let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=${startYear}-01-01&primary_release_date.lte=${endYear}-12-31&popularity.gte=10&vote_count.gte=300&sort_by=popularity.desc&page=1`;
-      const response = await fetch(url);
-      const data = await response.json();
-      return data.results || [];
-    }
-    
-    // Search for specific iconic slashers
+    // Page 1 - Curated classics
     const searches = [
       `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=halloween+1978`,
-      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=friday+the+13th`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=friday+the+13th+1980`,
       `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=nightmare+on+elm+street`,
       `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=scream+1996`,
       `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=texas+chainsaw+massacre`,
-      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=childs+play`,
-      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=candyman`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=child's+play+chucky`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=candyman+1992`,
       `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=my+bloody+valentine`,
-      `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=1975-01-01&primary_release_date.lte=1995-12-31&popularity.gte=15&vote_count.gte=400&sort_by=popularity.desc`
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=black+christmas+1974`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=sleepaway+camp`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=prom+night+horror`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=the+burning+1981`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=i+know+what+you+did+last+summer`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=urban+legend+1998`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=happy+death+day`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=you're+next+slasher`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=hatchet+horror`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=terrifier+clown`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=x+2022+slasher`,
+      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=freaky+body+swap`
     ];
     
     const allResults = [];
@@ -785,19 +796,25 @@ if (lowerQuery.includes('slasher')) {
       const response = await fetch(url);
       const data = await response.json();
       if (data.results) {
-        const horrorResults = data.results.filter(m => m.genre_ids && m.genre_ids.includes(27));
+        const horrorResults = data.results.filter(m => 
+          m.genre_ids && 
+          m.genre_ids.includes(27) && 
+          m.poster_path && 
+          m.vote_count > 0 && 
+          m.release_date
+        );
         allResults.push(...horrorResults);
       }
     }
     
     const uniqueMovies = Array.from(new Map(allResults.map(m => [m.id, m])).values());
-    return uniqueMovies.slice(0, 20);
+    return uniqueMovies;
   } else {
-    // For page 2+
-    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&primary_release_date.gte=1975-01-01&primary_release_date.lte=1995-12-31&popularity.gte=10&vote_count.gte=300&sort_by=popularity.desc&page=${page}`;
+    // Page 2+ - Use slasher keyword to get MORE slashers
+    let url = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&with_keywords=12339&sort_by=popularity.desc&vote_count.gte=30&page=${page}`;
     const response = await fetch(url);
     const data = await response.json();
-    return data.results || [];
+    return data.results?.filter(m => m.poster_path && m.vote_count > 0 && m.release_date) || [];
   }
 }
 
@@ -1270,22 +1287,131 @@ if (lowerQuery.includes('classic')) {
         return data.results || [];
       }
       
-      const searchUrl = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&page=${page}`;
-      const searchResponse = await fetch(searchUrl);
-      const searchData = await searchResponse.json();
-      
-      const horrorResults = searchData.results?.filter(m => m.genre_ids && m.genre_ids.includes(27)) || [];
-      
-      if (horrorResults.length > 0) {
-        return horrorResults;
-      }
-      
-      const fallbackUrl = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&sort_by=popularity.desc&page=${page}`;
-      const fallbackResponse = await fetch(fallbackUrl);
-      const fallbackData = await fallbackResponse.json();
-      return fallbackData.results || [];
-    }
+     // SMART FRANCHISE SEARCH
+const franchiseMap = {
+  'halloween': 'halloween michael myers',
+  'freddy': 'nightmare on elm street',
+  'krueger': 'nightmare on elm street',
+  'jason': 'friday the 13th',
+  'friday': 'friday the 13th',
+  'scream': 'scream ghostface',
+  'ghostface': 'scream',
+  'chucky': "child's play",
+  'candyman': 'candyman',
+  'leatherface': 'texas chainsaw massacre',
+  'chainsaw': 'texas chainsaw massacre',
+  'saw': 'saw jigsaw',
+  'jigsaw': 'saw',
+  'final destination': 'final destination',
+  'conjuring': 'conjuring',
+  'insidious': 'insidious',
+  'paranormal activity': 'paranormal activity',
+  'purge': 'the purge',
+  'annabelle': 'annabelle conjuring',
+  'it': 'it pennywise',
+  'pennywise': 'it stephen king',
+'hellraiser': 'hellraiser pinhead',
+'pinhead': 'hellraiser',
+'alien': 'alien xenomorph',
+'predator': 'predator',
+'scream': 'scream ghostface',
+'wrong turn': 'wrong turn',
+'hostel': 'hostel',
+'cabin': 'cabin in the woods',
+'evil dead': 'evil dead',
+'ash': 'evil dead ash',
+'sinister': 'sinister bughuul',
+'insidious': 'insidious',
+'conjuring': 'conjuring warren',
+'nun': 'the nun conjuring',
+'orphan': 'orphan esther'
+};
 
+// Right after the franchiseMap, add:
+const directorMap = {
+  'wes craven': 'wes craven horror',
+  'john carpenter': 'john carpenter horror',
+  'james wan': 'james wan horror',
+  'jordan peele': 'jordan peele horror',
+  'ari aster': 'ari aster horror',
+  'mike flanagan': 'mike flanagan horror',
+  'guillermo del toro': 'guillermo del toro horror',
+  'sam raimi': 'sam raimi horror',
+  'ti west': 'ti west horror'
+};
+
+// Check if query matches a franchise
+let searchQuery = query;
+for (const [key, value] of Object.entries(franchiseMap)) {
+  if (lowerQuery.includes(key)) {
+    searchQuery = value;
+    break;
+  }
+}
+
+// Check directors too
+for (const [key, value] of Object.entries(directorMap)) {
+  if (lowerQuery.includes(key)) {
+    searchQuery = value;
+    break;
+  }
+}
+
+
+
+// GENERAL TITLE SEARCH with smart matching
+const searchUrl = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchQuery)}&page=${page}`;
+const searchResponse = await fetch(searchUrl);
+const searchData = await searchResponse.json();
+
+const horrorResults = searchData.results?.filter(m => m.genre_ids && m.genre_ids.includes(27)) || [];
+
+if (horrorResults.length > 0) {
+  return horrorResults;
+}
+
+// If no results, try fuzzy matching for common misspellings
+const misspellingMap = {
+  'haloween': 'halloween',
+  'holloween': 'halloween',
+  'micheal': 'michael',
+  'freddie': 'freddy',
+  'kruger': 'krueger',
+  'exorcist': 'the exorcist',
+  'exorsist': 'the exorcist',
+  'conjering': 'conjuring',
+  'insideous': 'insidious',
+  'paranorml': 'paranormal',
+  'hereditary': 'hereditary',
+  'heriditary': 'hereditary'
+};
+
+let correctedQuery = lowerQuery;
+for (const [wrong, right] of Object.entries(misspellingMap)) {
+  if (lowerQuery.includes(wrong)) {
+    correctedQuery = correctedQuery.replace(wrong, right);
+    break;
+  }
+}
+
+// Try search with corrected spelling if different
+if (correctedQuery !== lowerQuery) {
+  const correctedUrl = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(correctedQuery)}&page=${page}`;
+  const correctedResponse = await fetch(correctedUrl);
+  const correctedData = await correctedResponse.json();
+  const correctedResults = correctedData.results?.filter(m => m.genre_ids && m.genre_ids.includes(27)) || [];
+  
+  if (correctedResults.length > 0) {
+    return correctedResults;
+  }
+}
+
+// FALLBACK - Show popular horror
+const fallbackUrl = `${TMDB_BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27&sort_by=popularity.desc&page=${page}`;
+const fallbackResponse = await fetch(fallbackUrl);
+const fallbackData = await fallbackResponse.json();
+return fallbackData.results || [];
+}
     async function findSimilarMovies(movieName, page = 1) {
       try {
         const searchUrl = `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(movieName)}`;
